@@ -20,7 +20,7 @@ min_ping = 500 # minimum ping to use circuit in milliseconds
 
 
 def ping_circuit(client_ip, guard_node, middle_node, exit_node,\
-    cons_rel_stats, descriptors, congmodel, pdelmodel):    
+    cons_rel_stats, descriptors, congmodel, pdelmodel):
     ping_time = 0
     for node, coef in ((guard_node, 2), (middle_node, 2), (exit_node, 1)):
         rel_stat = cons_rel_stats[node]
@@ -71,11 +71,11 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
         weighted_exits: (list) (middle, cum_weight) pairs for exit position
         exits_exact: (bool) Is weighted_exits exact or does it need rechecking?
             weighed_exits is special because exits are chosen first and thus
-            don't depend on the other circuit positions, and so potentially are        
+            don't depend on the other circuit positions, and so potentially are
             precomputed exactly.
         weighted_middles: (list) (middle, cum_weight) pairs for middle position
         weighted_guards: (list) (middle, cum_weight) pairs for middle position
-        callbacks: object w/ method circuit_creation(circuit)        
+        callbacks: object w/ method circuit_creation(circuit)
     Output:
         circuit: (dict) a newly created circuit with keys
             'time': (int) seconds from time zero
@@ -88,7 +88,7 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
             'avg_ping': (float) average ping time during most-recent use
     """
 #            'cons_rel_stats': (dict) relay stats for active consensus
-    
+
     if (circ_time < cons_valid_after) or\
         (circ_time >= cons_fresh_until):
         raise ValueError('consensus not fresh for circ_time in create_circuit')
@@ -96,7 +96,7 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
     num_attempts = 0
     ntor_supported = False
     while (num_attempts < pathsim.TorOptions.max_populate_attempts) and\
-        (not ntor_supported):            
+        (not ntor_supported):
         # select exit node
         i = 1
         while (True):
@@ -111,11 +111,11 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
                 print('Exit selection #{0} is hibernating - retrying.'.\
                     format(i))
             i += 1
-        if pathsim._testing:    
+        if pathsim._testing:
             print('Exit node: {0} [{1}]'.format(
                 cons_rel_stats[exit_node].nickname,
                 cons_rel_stats[exit_node].fingerprint))
-    
+
         # select guard node
         # Hibernation status again checked here to reflect how in Tor
         # new guards would be chosen and added to the list prior to a circuit-
@@ -126,7 +126,7 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
             circ_guards = pathsim.get_guards_for_circ(cons_bw_weights,\
                 cons_bwweightscale, cons_rel_stats, descriptors,\
                 circ_fast, circ_stable, guards,\
-                exit_node, circ_time, weighted_guards)   
+                exit_node, circ_time, weighted_guards)
             guard_node = choice(circ_guards)
             if (hibernating_status[guard_node]):
                 if (not guards[guard_node]['made_contact']):
@@ -156,11 +156,11 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
             print('Guard node: {0} [{1}]'.format(
                 cons_rel_stats[guard_node].nickname,
                 cons_rel_stats[guard_node].fingerprint))
-    
+
         # select middle node
         # As with exit selection, hibernating status checked here to mirror Tor
         # selecting middle, having the circuit fail, reselecting a path,
-        # and attempting circuit creation again.    
+        # and attempting circuit creation again.
         i = 1
         while (True):
             middle_node = pathsim.select_middle_node(cons_bw_weights,\
@@ -171,7 +171,7 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
             if pathsim._testing:
                 print(\
                 'Middle selection #{0} is hibernating - retrying.'.format(i))
-            i += 1    
+            i += 1
         if pathsim._testing:
             print('Middle node: {0} [{1}]'.format(
                 cons_rel_stats[middle_node].nickname,
@@ -191,12 +191,12 @@ def create_circuit(cons_rel_stats, cons_valid_after, cons_fresh_until,
             format(num_attempts))
 
     cum_ping_time = 0
-    if pathsim._testing: print 'Doing {0} circuit pings on creation... '.format(num_pings_create),
+    if pathsim._testing: print('Doing {0} circuit pings on creation... ').format(num_pings_create),
     for i in xrange(num_pings_create):
         cum_ping_time += ping_circuit(client_ip, guard_node, middle_node,\
             exit_node, cons_rel_stats, descriptors, congmodel, pdelmodel)
     avg_ping_time = float(cum_ping_time)/num_pings_create
-    if pathsim._testing: print "ave congestion is {0}".format(avg_ping_time)
+    if pathsim._testing: print('ave congestion is {0}').format(avg_ping_time)
 
     circuit = {'time':circ_time,
             'fast':circ_fast,
@@ -221,7 +221,7 @@ def client_assign_stream(client_state, stream, cons_rel_stats,\
     weighted_middles, weighted_guards, congmodel, pdelmodel, callbacks=None):
     """Assigns a stream to a circuit for a given client.
     Stores circuit measurements (pings) as would be measured during use."""
-        
+
     guards = client_state['guards']
     stream_assigned = None
 
@@ -265,15 +265,15 @@ at {0}'.format(stream['time']))
                         else:
                             print('Assigned unrecognized stream to clean \
 circuit at {0}'.format(stream['time']))
-                        
+
                     # reduce cover count for covered port needs
                     pathsim.uncover_circuit_ports(circuit,\
                         client_state['port_needs_covered'])
                 else:
                     new_clean_exit_circuits.append(circuit)
             client_state['clean_exit_circuits'] = new_clean_exit_circuits
-        else:   
-            if pathsim._testing:                                
+        else:
+            if pathsim._testing:
                 if (stream['type'] == 'connect'):
                     print('Assigned CONNECT stream to port {0} to \
 dirty circuit at {1}'.format(stream['port'], stream['time']))
@@ -283,7 +283,7 @@ at {0}'.format(stream['time']))
                 else:
                     print('Assigned unrecognized stream to dirty circuit \
 at {0}'.format(stream['time']))
-            
+
     # if stream still unassigned we must make new circuit
     if (stream_assigned == None):
         new_circ = None
@@ -308,23 +308,23 @@ at {0}'.format(stream['time']))
                 weighted_middles, weighted_guards, callbacks)
         else:
             raise ValueError('Unrecognized stream in client_assign_stream(): \
-{0}'.format(stream['type']))        
+{0}'.format(stream['type']))
         new_circ['dirty_time'] = stream['time']
         stream_assigned = new_circ
         client_state['dirty_exit_circuits'].appendleft(new_circ)
-        if pathsim._testing: 
-            if (stream['type'] == 'connect'):                           
+        if pathsim._testing:
+            if (stream['type'] == 'connect'):
                 print('Created circuit at time {0} to cover CONNECT \
 stream to ip {1} and port {2}.'.format(stream['time'], stream['ip'],\
-stream['port'])) 
+stream['port']))
             elif (stream['type'] == 'resolve'):
                 print('Created circuit at time {0} to cover RESOLVE \
 stream.'.format(stream['time']))
-            else: 
+            else:
                 print('Created circuit at time {0} to cover unrecognized \
 stream.'.format(stream['time']))
 
-    if pathsim._testing: print 'Doing {0} circuit pings on use... '.format(num_pings_use),
+    if pathsim._testing: print('Doing {0} circuit pings on use... ').format(num_pings_use),
     cum_ping_time = 0
     guard_node = stream_assigned['path'][0]
     middle_node = stream_assigned['path'][1]
@@ -333,9 +333,9 @@ stream.'.format(stream['time']))
         cum_ping_time += ping_circuit(client_ip, guard_node, middle_node,\
             exit_node, cons_rel_stats, descriptors, congmodel, pdelmodel)
     stream_assigned['avg_ping'] = float(cum_ping_time)/num_pings_use
-    if pathsim._testing: print "ave congestion is {0}".format(stream_assigned['avg_ping'])
-    
+    if pathsim._testing: print('ave congestion is {0}').format(stream_assigned['avg_ping'])
+
     if (callbacks is not None):
-        callbacks.stream_assignment(stream, stream_assigned)    
-    
+        callbacks.stream_assignment(stream, stream_assigned)
+
     return stream_assigned

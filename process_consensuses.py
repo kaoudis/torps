@@ -4,18 +4,17 @@ import stem.descriptor
 import stem
 import os
 import os.path
-import cPickle as pickle
+import pickle #cPickle
 
 
 def read_descriptors(descriptors, descriptor_dir, skip_listener):
-	"""Add to descriptors contents of descriptor archive in descriptor_dir."""
-
-        num_descriptors = 0    
+        """Add to descriptors contents of descriptor archive in descriptor_dir."""
+        num_descriptors = 0
         num_relays = 0
         print('Reading descriptors from: {0}'.format(descriptor_dir))
-        reader = stem.descriptor.reader.DescriptorReader(descriptor_dir,
-            validate=True)
-        reader.register_skip_listener(skip_listener)        
+        reader = stem.descriptor.reader.DescriptorReader(descriptor_dir,validate=True)
+        reader.register_skip_listener(skip_listener)
+
         with reader:
             for desc in reader:
                 if (num_descriptors % 10000 == 0):
@@ -27,7 +26,7 @@ def read_descriptors(descriptors, descriptor_dir, skip_listener):
                 descriptors[desc.fingerprint]\
                     [pathsim.timestamp(desc.published)] = desc
         print('#descriptors: {0}; #relays:{1}'.\
-            format(num_descriptors,num_relays)) 
+            format(num_descriptors,num_relays))
 
 
 def process_consensuses(in_dirs, slim, initial_descriptor_dir):
@@ -41,31 +40,32 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
     descriptors = {}
     def skip_listener(path, exception):
         print('ERROR [{0}]: {1}'.format(path.encode('ascii', 'ignore'), exception.__unicode__().encode('ascii','ignore')))
-        
+
     if slim:
         print('Outputting slim classes.')
-        
+
     # initialize descriptors
     if (initial_descriptor_dir is not None):
     	read_descriptors(descriptors, initial_descriptor_dir, skip_listener)
-        
-    for in_consensuses_dir, in_descriptors, desc_out_dir in in_dirs:
-		# read all descriptors into memory        
-    	read_descriptors(descriptors, in_descriptors, skip_listener)
 
-        # output pickled consensuses, dict of most recent descriptors, and 
-        # list of hibernation status changes
+    for in_consensuses_dir, in_descriptors, desc_out_dir in in_dirs: # read all descriptors into memory
+        read_descriptors(descriptors, in_descriptors, skip_listener)
+
+        # output pickled consensuses, dict of most recent descriptors, and list of hibernation status changes
         num_consensuses = 0
         pathnames = []
+
         for dirpath, dirnames, fnames in os.walk(in_consensuses_dir):
             for fname in fnames:
                 pathnames.append(os.path.join(dirpath,fname))
+
         pathnames.sort()
+
         for pathname in pathnames:
             filename = os.path.basename(pathname)
             if (filename[0] == '.'):
                 continue
-            
+
             print('Processing consensus file {0}'.format(filename))
             cons_f = open(pathname, 'rb')
             descriptors_out = {}
@@ -80,7 +80,7 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                 consensus = None
             num_not_found = 0
             num_found = 0
-            for r_stat in stem.descriptor.parse_file(cons_f, validate=True):                    
+            for r_stat in stem.descriptor.parse_file(cons_f, validate=True):
                 if (cons_valid_after == None):
                     cons_valid_after = r_stat.document.valid_after
                     # compute timestamp version once here
@@ -126,7 +126,7 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                         # store fresh-period descs for hibernation tracking
                         if (t >= valid_after_ts) and \
                             (t <= fresh_until_ts):
-                            descs_while_fresh.append((t,d))                                
+                            descs_while_fresh.append((t,d))
                         # find most recent hibernating stat before fresh period
                         # prefer most-recent descriptor before fresh period
                         # but use oldest after valid_after if necessary
@@ -153,7 +153,7 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                                 desc.exit_policy, desc.ntor_onion_key)
                     else:
                         descriptors_out[r_stat.fingerprint] = desc
-                     
+
                     # store hibernating statuses
                     if (desc_time_fresh == None):
                         raise ValueError('Descriptor error for {0}:{1}.\n Found  descriptor before published date {2}: {3}\nDid not find descriptor for initial hibernation status for fresh period starting {4}.'.format(r_stat.nickname, r_stat.fingerprint, pub_time, desc_time, valid_after_ts))
@@ -167,7 +167,7 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                     descs_while_fresh.sort(key = lambda x: x[0])
                     for (t,d) in descs_while_fresh:
                         if (d.hibernating != cur_hibernating):
-                            cur_hibernating = d.hibernating                                   
+                            cur_hibernating = d.hibernating
                             hibernating_statuses.append(\
                                 (t, d.fingerprint, cur_hibernating))
                             if (cur_hibernating):
@@ -175,13 +175,13 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                                     .format(d.nickname, d.fingerprint, t))
                             else:
                                 print('{0}:{1} stopped hibernating at {2}'\
-                                    .format(d.nickname, d.fingerprint, t))                   
+                                    .format(d.nickname, d.fingerprint, t))
                 else:
 #                            print(\
 #                            'Descriptor not found for {0}:{1}:{2}'.format(\
 #                                r_stat.nickname,r_stat.fingerprint, pub_time))
                     num_not_found += 1
-                    
+
             # output pickled consensus, recent descriptors, and
             # hibernating status changes
             if (cons_valid_after != None) and\
@@ -206,9 +206,9 @@ def process_consensuses(in_dirs, slim, initial_descriptor_dir):
                 print('Did not find descriptors for {0} relays\n'.\
                     format(num_not_found))
             else:
-                print('Problem parsing {0}.'.format(filename))             
+                print('Problem parsing {0}.'.format(filename))
             num_consensuses += 1
-            
+
             cons_f.close()
-                
+
         print('# consensuses: {0}'.format(num_consensuses))

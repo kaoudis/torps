@@ -1,6 +1,6 @@
 from bisect import bisect_left
 from random import random, randint
-import cPickle as pickle
+import pickle #cPickle
 import datetime
 
 class UserTraces(object):
@@ -81,7 +81,7 @@ We collected session traces of approximately 20 minutes for each usage class. We
                 for i in xrange(17):
                     sessionend = self.schedule_session(key, trace, sessionend)
 
-        # construct new model of typical usage                    
+        # construct new model of typical usage
         self.schedule["typical"] = []
         t1, t2, t3, t4 = 32400, 43200, 54000, 64800 # sunday, 9,12,3,6
         for numdays in [0,1,2,3,4,5,6]:
