@@ -2,6 +2,7 @@
 - pathsim.py: Path simulator code. Needs Tor's stem library, consensuses, and descriptors
 - congestion_aware_pathsim.py: Path simulator code for congestion-aware Tor (CAT) variant
 - vcs_pathsim.py: Path simulator code for SAFEST (i.e. virtual-coordinate system) variant
+- wok_pathsim.py: path simulator code for Wok (builds on everything here, but does our cute little routing variant instead)
 
 ### Top-level analysis scripts:
 - pathsim_analysis.py: Turns simulator output into statistics.
@@ -21,9 +22,9 @@
 - util: Code for various useful intermediate operations
 
 For an example of how TorPS can be used, see
-> **Users Get Routed: Traffic Correlation on Tor by Realistic Adversaries**  
-> by _Aaron Johnson, Chris Wacek, Rob Jansen, Micah Sherr, and Paul Syverson_  
-> To appear in Proceedings of the 20th ACM Conference on Computer and Communications Security (CCS 2013).  
+> **Users Get Routed: Traffic Correlation on Tor by Realistic Adversaries**
+> by _Aaron Johnson, Chris Wacek, Rob Jansen, Micah Sherr, and Paul Syverson_
+> To appear in Proceedings of the 20th ACM Conference on Computer and Communications Security (CCS 2013).
 
 The BibTeX citation for this paper is
 <pre><code>@inproceedings{usersrouted-ccs13,
@@ -52,15 +53,15 @@ Basic path simulation can be done entirely with pathsim.py. It requires Stem
   "[in-dir]/consensuses-[year]-[month]", where [year] is in YYYY format and [month]
   in is MM format. Similarly, extract the archive of descriptors for a given month into
   the directory "[in-dir]/server-descriptors-[year]-[month]".
-  
+
     The processing command will go through each month from [start_year]/[start_month] to
   [end_year]/[end_month]. It will output the processed "network state files" for
   a given month into the directory "[out_dir]/network-state-[year]-[month]", which will
   be created if it doesn't exist.
-  
+
     If --slim is provided (recommended), then the network state files will not use the stem
   classes and will be smaller and faster to process during simulation.
-  
+
     If the consensuses being processed start at the very beginning of a
   month, which is true assuming you just extract some monthly consensus archives as
   provided by Tor Metrics, then the --initial_descriptor_dir argument should be included
@@ -97,30 +98,30 @@ Basic path simulation can be done entirely with pathsim.py. It requires Stem
   Replace [args] with "-h" for argument details. An example of the command for a 5000-sample
   simulation in which the client makes a connection to Google (74.125.131.105) every 10 minutes
   (i.e. 600 seconds) is:
-  <pre><code>python pathsim.py simulate --nsf_dir out/ns-2013-08--2014-07 --num_samples 5000 
+  <pre><code>python pathsim.py simulate --nsf_dir out/ns-2013-08--2014-07 --num_samples 5000
   --user_model simple=600 --format normal tor
   </pre></code>
   Following is another example of the simulate command. This example executes a simulation in which
   the user has "typical"
   behavior as given in the included trace file, a malicious guard relay is added with consensus
   bandwidth 15000, a malicious exit relay is added with consensus bandwidth 10000, the output
-  indicates only if a malicious guard and/or exit is selected, the number of 
-  client guards is adjusted to 1, and guard expiration occurs randomly between 270 and 300 days 
+  indicates only if a malicious guard and/or exit is selected, the number of
+  client guards is adjusted to 1, and guard expiration occurs randomly between 270 and 300 days
   after initial selection:
   <pre><code>python pathsim.py simulate --nsf_dir out/ns-2013-08--2014-07 --num_samples 5000
   --trace_file in/users2-processed.traces.pickle --user_model typical --format relay-adv
   --adv_guard_cons_bw 15000 --adv_exit_cons_bw 10000 --adv_time 0 --num_adv_guards 1
   --num_adv_exits 1 --num_guards 1 --guard_expiration 270 --loglevel INFO tor
-  </pre></code>  
-  The included trace file (in/users2-processed.traces.pickle) includes six 20-minute traces recorded 
-  from a volunteer using Tor for the following activities: Facebook, Gmail / Google Chat (now 
+  </pre></code>
+  The included trace file (in/users2-processed.traces.pickle) includes six 20-minute traces recorded
+  from a volunteer using Tor for the following activities: Facebook, Gmail / Google Chat (now
   Hangouts), Google Calendar / Google Docs, Web search, IRC, and BitTorrent. These are repeated on a
   weekly schedule to create user models that fill the simulated time period. Also, a "typical" model
   is provided including all of  the first four traces (i.e. Facebook, Gmail/GChat, GCal/GDocs, Web
   search) in the schedule, and "best" and "worst" models are provided by replacing the TCP ports in
   the typical model with ports 443 and 6523, respectively. See the paper "Users Get Routed: Traffic
   Correlation on Tor by Realistic Adversaries" cited above for details on these traces and models.
-	    
+
 ### Plotting Simulation Data
 TorPS includes some basic functions to quickly analyze and view the results of your
 simulations. Note that the shell script analyze_and_plot.sh gives an example of how to use
