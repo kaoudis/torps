@@ -9,7 +9,7 @@ class AdversaryInsertion(object):
     def add_adv_guards(self, num_adv_guards, bandwidth):
         """"Adds adv guards into self.add_relays and self.add_descriptors."""
         #, adv_relays, adv_descriptors
-        for i in xrange(num_adv_guards):
+        for i in range(num_adv_guards):
             # create consensus
             num_str = str(i+1)
             fingerprint = '0' * (40-len(num_str)) + num_str
@@ -18,7 +18,7 @@ class AdversaryInsertion(object):
                 Flag.VALID]
             self.adv_relays[fingerprint] = pathsim.RouterStatusEntry(fingerprint,
                 nickname, flags, bandwidth)
-            
+
             # create descriptor
             hibernating = False
             family = {}
@@ -32,7 +32,7 @@ class AdversaryInsertion(object):
 
     def add_adv_exits(self, num_adv_guards, num_adv_exits, bandwidth):
         """"Adds adv exits into self.add_relays and self.add_descriptors."""
-        for i in xrange(num_adv_exits):
+        for i in range(num_adv_exits):
             # create consensus
             num_str = str(i+1)
             fingerprint = 'F' * (40-len(num_str)) + num_str
@@ -41,7 +41,7 @@ class AdversaryInsertion(object):
                 Flag.VALID]
             self.adv_relays[fingerprint] = pathsim.RouterStatusEntry(fingerprint,
                 nickname, flags, bandwidth)
-            
+
             # create descriptor
             hibernating = False
             family = {}
@@ -63,7 +63,7 @@ class AdversaryInsertion(object):
         self.testing = testing
         self.first_modification = True
 
-        
+
     def modify_network_state(self, network_state):
         """Adds adversarial guards and exits to cons_rel_stats and
         descriptors dicts."""
@@ -101,7 +101,7 @@ class RaiseGuardConsBWThreshold(object):
         self.guard_bw_threshold = int(class_arg)
         self.testing = testing
 
-        
+
     def modify_network_state(self, network_state):
         """Remove Guard flag when relay doesn't meet consensus bandwidth threshold."""
 
