@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# congestion-aware tor experiment 
+# congestion-aware tor experiment
 
 BASE_DIR=$1
 

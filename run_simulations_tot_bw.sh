@@ -37,7 +37,7 @@
 #	10: 8738133 / 1747626; 38396 / 3582
 
 
-BASE_DIR=/home/ajohnson/research/torps.git
+BASE_DIR=~/Development/Git/torps
 
 TOT_PROCESSES=20
 PARALLEL_PROCESSES=$1
