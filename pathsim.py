@@ -509,8 +509,10 @@ def guard_filter_for_circ(guard, cons_rel_stats, descriptors, fast,\
     # note that hibernate status not checked (only checks unreachable_since)
 
     if (guards[guard]['bad_since'] == None):
+
         if (guard in cons_rel_stats) and (guard in descriptors):
             rel_stat = cons_rel_stats[guard]
+
             return ((not fast) or (Flag.FAST in rel_stat.flags)) and\
                 ((not stable) or (Flag.STABLE in rel_stat.flags)) and\
                 ((guards[guard]['unreachable_since'] == None) or\
@@ -519,8 +521,10 @@ def guard_filter_for_circ(guard, cons_rel_stats, descriptors, fast,\
                 (not in_same_family(descriptors, exit, guard)) and\
                 (not in_same_16_subnet(descriptors[exit].address,\
                     descriptors[guard].address))
+
         else:
-            raise ValueError('Guard {0} not present in consensus or\ descriptors but wasn\'t marked bad.'.format(guard))
+            raise ValueError('Guard {0} not present in consensus or descriptors but wasn\'t marked bad.'.format(guard))
+
     else:
         return False
 
@@ -813,6 +817,7 @@ def set_initial_hibernating_status(hibernating_status, hibernating_statuses,
 def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
     cons_valid_after):
     """Updates client state for new consensus period."""
+
     if _testing:
         print('Updating state for client {0} given new consensus.'.\
             format(client_state['id']))
@@ -822,6 +827,8 @@ def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
 
     guards = client_state['guards']
     iterable_guards = copy.deepcopy(guards)
+    # make a copy we can iterate over so we can change the main version
+
     for guard, guard_props in iterable_guards.items():
         # set guard as down if (following Tor's
         # entry_guard_set_status)
@@ -836,12 +843,11 @@ def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
         # note that hibernating *not* considered here
         if (guard_props['bad_since'] == None):
             if (guard not in cons_rel_stats) or\
-                (Flag.RUNNING not in\
-                 cons_rel_stats[guard].flags) or\
-                (Flag.GUARD not in\
-                 cons_rel_stats[guard].flags):
+                (Flag.RUNNING not in cons_rel_stats[guard].flags) or\
+                (Flag.GUARD not in cons_rel_stats[guard].flags):
                 if _testing:
                     print('Putting down guard {0}'.format(guard))
+
                 guard_props['bad_since'] = cons_valid_after
         else:
             if (guard in cons_rel_stats) and\
@@ -852,6 +858,7 @@ def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
                 if _testing:
                     print('Bringing up guard {0}'.format(guard))
                 guard_props['bad_since'] = None
+
         # remove if down time including this period exceeds limit
         if (guard_props['bad_since'] != None):
             if (cons_fresh_until-guard_props['bad_since'] >=\
@@ -958,10 +965,8 @@ def timed_client_updates(cur_time, client_state, port_needs_global,
                 print('Creating {0} circuit(s) at time {1} to cover port \
 {2}.'.format(need['cover_num']-client_state['port_needs_covered'][port],\
  cur_time, port))
-            while (client_state['port_needs_covered'][port] <\
-                    need['cover_num']) and\
-                (len(client_state['clean_exit_circuits']) < \
-                    TorOptions.max_unused_open_circuits):
+            while (client_state['port_needs_covered'][port] < need['cover_num']) and\
+                  (len(client_state['clean_exit_circuits']) < TorOptions.max_unused_open_circuits):
                 new_circ = create_circuit(cons_rel_stats,
                     cons_valid_after, cons_fresh_until,
                     cons_bw_weights, cons_bwweightscale,
@@ -970,15 +975,20 @@ def timed_client_updates(cur_time, client_state, port_needs_global,
                     congmodel, pdelmodel,
                     port_need_weighted_exits[port],
                     True, weighted_middles, weighted_guards, callbacks)
+
                 client_state['clean_exit_circuits'].appendleft(new_circ)
 
                 # cover this port and any others
                 client_state['port_needs_covered'][port] += 1
                 new_circ['covering'].add(port)
-                for pt, nd in port_needs_global.items():
+
+                iterable_port_needs = copy.deepcopy(port_needs_global)
+
+                for pt, nd in iterable_port_needs.items():
                     if (pt != port) and\
                         (circuit_covers_port_need(new_circ,
                             descriptors, pt, nd)):
+
                         client_state['port_needs_covered'][pt] += 1
                         new_circ['covering'].add(pt)
 
@@ -1577,12 +1587,15 @@ def create_circuits(network_states, streams, num_samples, congmodel,
 
                 # do client stream assignment
                 for client_state in client_states:
+
                     if (callbacks is not None):
                         callbacks.set_sample_id(client_state['id'])
+
                     if _testing:
                         print('Client {0} stream assignment.'.\
                             format(client_state['id']))
-                    guards = client_state['guards']
+
+                    guards = copy.deepcopy(client_state['guards'])
 
                     stream_assigned = client_assign_stream(\
                         client_state, stream, cons_rel_stats,
@@ -1753,8 +1766,8 @@ pathsim, and pickle it. The pickled object is input to the simulate command')
                 in_dirs.append((cons_dir, desc_dir, desc_out_dir))
                 month += 1
             month = 1
-        process_consensuses.process_consensuses(in_dirs, args.slim,
-            args.initial_descriptor_dir)
+        process_consensuses.process_consensuses(in_dirs, args.slim, args.initial_descriptor_dir)
+
     elif (args.subparser == 'simulate'):
         logging.basicConfig(stream=sys.stdout, level=getattr(logging,
             args.loglevel))
@@ -1853,8 +1866,8 @@ pathsim, and pickle it. The pickled object is input to the simulate command')
         callbacks = output_class(args.format, _testing, file=sys.stdout)
         callbacks.print_header()
         # simulate circuit creation and stream assignment
-        create_circuits(network_states, streams, args.num_samples, congmodel,
-            pdelmodel, callbacks)
+        create_circuits(network_states, streams, args.num_samples, congmodel, pdelmodel, callbacks)
+
     elif (args.subparser == 'concattraces'):
         ut = UserTraces(args.facebook_filename, args.gmailchat_filename,
             args.gcalgdocs_filename, args.websearch_filename,
