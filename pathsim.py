@@ -21,7 +21,6 @@ import logging
 logger = logging.getLogger(__name__)
 _testing = False#True
 
-
 class TorOptions:
     """Stores parameters set by Tor."""
     # given by #define ROUTER_MAX_AGE (60*60*48) in or.h
@@ -166,7 +165,7 @@ def pad_network_state_files(network_state_files):
     nsf_date = None
     network_state_files_padded = []
     for nsf in network_state_files:
-        f_datenums = map(int, os.path.basename(nsf).split('-')[:-1])
+        f_datenums = list(map(int, os.path.basename(nsf).split('-')[:-1]))
         new_nsf_date = datetime.datetime(f_datenums[0], f_datenums[1], f_datenums[2], f_datenums[3], f_datenums[4], f_datenums[5])
         if (nsf_date != None):
             td = new_nsf_date - nsf_date
@@ -745,8 +744,8 @@ def get_network_state(ns_file):
         print('Using file {0}'.format(ns_file))
 
     cons_rel_stats = {}
-    with open(ns_file, 'r') as nsf:
-        consensus = pickle.load(nsf)
+    with open(ns_file, 'rb') as nsf:
+        consensus = pickle.load(nsf, encoding='latin1')
         new_descriptors = pickle.load(nsf)
         hibernating_statuses = pickle.load(nsf)
 
@@ -1597,7 +1596,7 @@ def get_user_model(start_time, end_time, tracefilename=None,
         else:
             http_request_wait = 600
         str_ip = '74.125.131.105' # www.google.com
-        for t in xrange(start_time, end_time, http_request_wait):
+        for t in range(start_time, end_time, http_request_wait):
             streams.append({'time':t,'type':'connect','ip':str_ip,'port':80})
     else:
         ut = UserTraces.from_pickle(tracefilename)
@@ -1796,14 +1795,16 @@ pathsim, and pickle it. The pickled object is input to the simulate command')
         network_states = get_network_states(network_state_files,
             network_modifiers)
 
+        # print(network_state_files)
+
         # determine start and end times
         start_time = None
-        with open(network_state_files[0]) as nsf:
-            consensus = pickle.load(nsf)
+        with open(network_state_files[0], 'rb') as nsf:
+            consensus = pickle.load(nsf, encoding='latin1')
             start_time = timestamp(consensus.valid_after)
         end_time = None
-        with open(network_state_files[-1]) as nsf:
-            consensus = pickle.load(nsf)
+        with open(network_state_files[-1], 'rb') as nsf:
+            consensus = pickle.load(nsf, encoding='latin1')
             end_time = timestamp(consensus.fresh_until)
 
         # get our stream creation model from our user traces

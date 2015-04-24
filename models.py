@@ -70,7 +70,7 @@ We collected session traces of approximately 20 minutes for each usage class. We
             monmorn = 115200
             for morning in [monmorn, monmorn+day, monmorn+day*2, monmorn+day*3, monmorn+day*4]:
                 sessionend = self.schedule_session(key, trace, morning)
-                for i in xrange(26):
+                for i in range(26):
                     sessionend = self.schedule_session(key, trace, sessionend)
         for key in ["bittorrent"]:
             self.schedule[key] = []
@@ -78,7 +78,7 @@ We collected session traces of approximately 20 minutes for each usage class. We
             sunmorn = 0
             for morning in [sunmorn, sunmorn+day*6]:
                 sessionend = self.schedule_session(key, trace, morning)
-                for i in xrange(17):
+                for i in range(17):
                     sessionend = self.schedule_session(key, trace, sessionend)
 
         # construct new model of typical usage

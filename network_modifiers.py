@@ -81,7 +81,7 @@ class AdversaryInsertion(object):
             if self.testing:
                 print('Adding {0} relays to consensus.'.format(\
                     len(self.adv_relays)))
-            for fprint, relay in self.adv_relays.iteritems():
+            for fprint, relay in self.adv_relays.items():
                 if fprint in network_state.cons_rel_stats:
                     raise ValueError(\
                         'Added relay exists in consensus: {0}:{1}'.\
@@ -107,7 +107,7 @@ class RaiseGuardConsBWThreshold(object):
 
         num_guard_flags = 0
         num_guard_flags_removed = 0
-        for fprint, rel_stat in network_state.cons_rel_stats.iteritems():
+        for fprint, rel_stat in network_state.cons_rel_stats.items():
             if (Flag.GUARD in rel_stat.flags):
                 num_guard_flags += 1
                 if (rel_stat.bandwidth < self.guard_bw_threshold):
