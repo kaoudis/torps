@@ -17,6 +17,7 @@ import network_modifiers
 import event_callbacks
 import importlib
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 _testing = False#True
@@ -605,11 +606,11 @@ def get_guards_for_circ(bw_weights, bwweightscale, cons_rel_stats,\
         # Tor uses fixed Stable=False and Fast=True flags when calculating #
         # live but fixed Stable=Fast=False when adding guards here (weirdly).
         # (as in choose_random_entry_impl() and its pick_entry_guards() call)
-        live_guards = filter(lambda x: (guards[x]['bad_since']==None) and\
+        live_guards =list( filter(lambda x: (guards[x]['bad_since']==None) and\
                                 (x in descriptors) and\
                                 ((guards[x]['unreachable_since'] == None) or\
                                  guard_is_time_to_retry(guards[x],circ_time)),\
-                            guards)
+                            guards) )
         for i in range(TorOptions.num_guards - len(live_guards)):
             new_guard = get_new_guard(bw_weights, bwweightscale,\
                 cons_rel_stats, descriptors, guards,\
@@ -624,9 +625,9 @@ def get_guards_for_circ(bw_weights, bwweightscale, cons_rel_stats,\
                 'last_attempted':0, 'made_contact':False}
 
     # check for guards that will work for this circuit
-    guards_for_circ = filter(lambda x: guard_filter_for_circ(x,\
+    guards_for_circ = list( filter(lambda x: guard_filter_for_circ(x,\
         cons_rel_stats, descriptors, fast, stable, exit, circ_time, guards),\
-        guards)
+        guards) )
     # add new guards while there aren't enough for this circuit
     # adding is done without reference to the circuit - how Tor does it
     while (len(guards_for_circ) < TorOptions.min_num_guards):
@@ -746,8 +747,8 @@ def get_network_state(ns_file):
     cons_rel_stats = {}
     with open(ns_file, 'rb') as nsf:
         consensus = pickle.load(nsf, encoding='latin1')
-        new_descriptors = pickle.load(nsf)
-        hibernating_statuses = pickle.load(nsf)
+        new_descriptors = pickle.load(nsf, encoding='latin1')
+        hibernating_statuses = pickle.load(nsf, encoding='latin1')
 
     # set variables from consensus
     cons_valid_after = timestamp(consensus.valid_after)
@@ -818,8 +819,10 @@ def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
 
     # Update guard list
     # Tor does this stuff whenever a descriptor is obtained
+
     guards = client_state['guards']
-    for guard, guard_props in guards.items():
+    iterable_guards = copy.deepcopy(guards)
+    for guard, guard_props in iterable_guards.items():
         # set guard as down if (following Tor's
         # entry_guard_set_status)
         # - not in current nodelist (!node check)
@@ -875,19 +878,25 @@ def period_client_update(client_state, cons_rel_stats, cons_fresh_until,\
 def timed_updates(cur_time, port_needs_global, client_states,
     hibernating_statuses, hibernating_status, cons_rel_stats):
     """Perform timing-based updates that apply to all clients."""
-    # expire port needs
-    for port, need in port_needs_global.items():
-        if (need['expires'] != None) and\
-            (need['expires'] <= cur_time):
+
+    # expire port needs (make a copy so we can update the original port needs list without python complaining)
+    iterable_port_needs = copy.deepcopy(port_needs_global)
+
+    for port, need in iterable_port_needs.items():
+        if (need['expires'] != None) and (need['expires'] <= cur_time):
+
             if _testing:
                 print('Port need for {0} expiring.'.format(port))
+
             # remove need from global list
             del port_needs_global[port]
+
             # remove coverage number and per-circuit coverage from client state
             for client_state in client_states:
                 del client_state['port_needs_covered'][port]
                 for circuit in client_state['clean_exit_circuits']:
                     circuit['covering'].discard(port)
+
     # update hibernating status
     while (hibernating_statuses) and\
         (hibernating_statuses[-1][0] <= cur_time):
@@ -1485,8 +1494,7 @@ def create_circuits(network_states, streams, num_samples, congmodel,
             port_need_exit_weights = get_position_weights(\
                 port_need_exits, cons_rel_stats, 'e', cons_bw_weights,\
                 cons_bwweightscale)
-            port_need_weighted_exits[port] =\
-                get_weighted_nodes(port_need_exits, port_need_exit_weights)
+            port_need_weighted_exits[port] = get_weighted_nodes(port_need_exits, port_need_exit_weights)
 
         # Store filtered exits for streams based only on port.
         # Conservative - never excludes a relay that exits to port for some ip.
@@ -1494,12 +1502,15 @@ def create_circuits(network_states, streams, num_samples, congmodel,
         stream_port_weighted_exits = {}
 
         # filter middles and precompute cumulative weights
-        potential_middles = filter(lambda x: middle_filter(x, cons_rel_stats,\
-            descriptors, None, None, None, None), cons_rel_stats.keys())
+        potential_middles = list(filter(lambda x: middle_filter(x, cons_rel_stats,\
+            descriptors, None, None, None, None), cons_rel_stats.keys()))
+
         if _testing:
             print('# potential middles: {0}'.format(len(potential_middles)))
+
         potential_middle_weights = get_position_weights(potential_middles,\
             cons_rel_stats, 'm', cons_bw_weights, cons_bwweightscale)
+
         weighted_middles = get_weighted_nodes(potential_middles,\
             potential_middle_weights)
 
@@ -1795,8 +1806,6 @@ pathsim, and pickle it. The pickled object is input to the simulate command')
         network_states = get_network_states(network_state_files,
             network_modifiers)
 
-        # print(network_state_files)
-
         # determine start and end times
         start_time = None
         with open(network_state_files[0], 'rb') as nsf:
@@ -1843,7 +1852,6 @@ pathsim, and pickle it. The pickled object is input to the simulate command')
         output_class = getattr(output_module, output_classname)
         callbacks = output_class(args.format, _testing, file=sys.stdout)
         callbacks.print_header()
-
         # simulate circuit creation and stream assignment
         create_circuits(network_states, streams, args.num_samples, congmodel,
             pdelmodel, callbacks)
