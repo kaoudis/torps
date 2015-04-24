@@ -11,7 +11,7 @@ BASE_DIR=~/Development/Git/torps
 SCRIPT=$1
 TOT_PROCESSES=512
 PARALLEL_PROCESSES=256
-DATE_RANGE=$2
+DATE_RANGE="2013-04--2015-04"
 NSF_TYPE="slim"
 OUTPUT="relay-adv"
 ADV_GUARD_BW=15000
@@ -29,7 +29,7 @@ EXP_NAME=$USERMODEL.$DATE_RANGE.$ADV_GUARD_BW-$NUM_ADV_GUARDS-$ADV_EXIT_BW-$ADV_
 OUT_DIR=$BASE_DIR/simulate/$EXP_NAME
 mkdir -p $OUT_DIR
 
-NSF_DIR=$BASE_DIR/out/network-state-2013-03 # I don't feel like renaming all the tor stuff
+NSF_DIR=$BASE_DIR/out/network-state/ns-$DATE_RANGE
 
 i=1
 while [ $i -le $TOT_PROCESSES ]
