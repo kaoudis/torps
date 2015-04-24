@@ -1,6 +1,6 @@
 #!/bin/sh
-BASE_DIR=~/Development/Git/torps
-DATE_RANGE="2013-04--2015-04"
+BASE_DIR=$1
+DATE_RANGE=$2
 NSF_DIR=$BASE_DIR/out/network-state/ns-$DATE_RANGE
 NUM_SAMPLES=1
 TRACEFILE=$BASE_DIR/in/users2-processed.traces.pickle
